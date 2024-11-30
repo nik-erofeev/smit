@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+  postgres:
+    container_name: "postgres"
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_NAME}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_DB}
+    volumes:
+      - postgres_storage_new:/var/lib/postgresql/data
+    env_file:
+      - .env
+    networks:
+      - custom
+    ports:
+      - "15432:5432"
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    command: [ '/smit_app/docker/app.sh' ]
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+    ports:
+      - '8000:8000'
+    networks:
+      - custom
+
+
+
+networks:
+  custom:
+    driver: bridge
+
+volumes:
+  postgres_storage_new:
+    driver: local
