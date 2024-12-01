@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.11]
+        python-version: [3.12]
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python
@@ -26,14 +26,10 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements_dev.txt
     - name: Run black
-      run:
-        black --check .
-    - name: Run flake8
-      run: flake8
+      run: black --check .
 
-    - uses: actions/checkout@v4
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.11'
-    - uses: pre-commit/action@v3.0.1
+    - name: Run flake8
+      run: flake8 .
+
+    - name: Run pre-commit
+      uses: pre-commit/action@v3.0.1
