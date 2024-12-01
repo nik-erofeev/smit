@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 
+from app.kafka.producer import KafkaProducer
 from app.routers.default_router import DefaultRouter
 from app.routers.tariff_router import TariffRouter
 from app.settings import AppConfig
@@ -13,20 +14,24 @@ class Application:
         db: Db,
         default: DefaultRouter,
         rate: TariffRouter,
+        kafka_producer: KafkaProducer,
     ):
         self._config = config
         self._db = db
         self._default = default
         self._rate = rate
+        self._kafka_producer = kafka_producer
 
     def setup(self, server: FastAPI) -> None:
         @server.on_event("startup")
         async def on_startup() -> None:
             await self._db.start()
+            await self._kafka_producer.start()
 
         @server.on_event("shutdown")
         async def on_shutdown() -> None:
             await self._db.shutdown()
+            await self._kafka_producer.stop()
 
         server.include_router(
             self._default.api_router,

@@ -1,11 +1,13 @@
 import json
-from datetime import date
+from datetime import date, datetime
 from uuid import UUID
 
 from fastapi import HTTPException, UploadFile
 from loguru import logger
 from sqlalchemy.exc import SQLAlchemyError
 
+from app.kafka.producer import KafkaProducer
+from app.models.action_type import ActionType
 from app.models.tariff import (
     InsuranceCostRequest,
     InsuranceCostResponse,
@@ -15,20 +17,20 @@ from app.models.tariff import (
 from app.repositories.tariff_repository import TariffRepo
 
 
-class RateFileProcessor:
+class TariffFileProcessor:
     @staticmethod
     def process_file(contents: bytes) -> dict[date, list[TariffBase]]:
         try:
-            rates_data = json.loads(contents)
-            date_rates = {}
-            for date_str, rate_list in rates_data.items():
-                effective_date = date.fromisoformat(date_str)
-                rate_objects = [TariffBase(**rate) for rate in rate_list]
-                date_rates[effective_date] = rate_objects
+            data = json.loads(contents)
+            tariffs = {}
+            for date_str, tariff_list in data.items():
+                published_at = date.fromisoformat(date_str)
+                tariff_objects = [TariffBase(**tariff) for tariff in tariff_list]
+                tariffs[published_at] = tariff_objects
                 logger.info(
-                    f"Processed rates for date {effective_date}: {rate_objects}",
+                    f"Processed rates for date {published_at}: {tariff_objects}",
                 )
-            return date_rates
+            return tariffs
         except json.JSONDecodeError:
             logger.exception("Invalid JSON format.")
             raise HTTPException(status_code=400, detail="Invalid JSON format")
@@ -41,8 +43,17 @@ class RateFileProcessor:
 
 
 class TariffService:
-    def __init__(self, tariff_repo: TariffRepo):
+    def __init__(self, tariff_repo: TariffRepo, kafka_producer: KafkaProducer):
         self._tariff_repo = tariff_repo
+        self._kafka_producer = kafka_producer
+
+    @staticmethod
+    def _create_message(action: ActionType, user_id: str = None) -> dict:
+        return {
+            "user_id": user_id,
+            "action": action.value,
+            "timestamp": str(datetime.now()),
+        }
 
     async def create_tariff(
         self,
@@ -51,20 +62,29 @@ class TariffService:
         response_tariffs = []
         for published_at, tariff_list in tariff_data.items():
             try:
-                date_accession = await self._tariff_repo.add_date_accession(
+                tariff_models = await self._tariff_repo.add_tariffs_with_date_accession(
                     published_at,
+                    tariff_list,
                 )
-                await self._add_tariff(tariff_list, date_accession.id)
+                example_user_id = tariff_models[0].date_accession_id
+
                 response_tariffs.append(
                     TariffResponse(
-                        id=date_accession.id,
+                        id=example_user_id,
                         published_at=published_at,
                         tariffs=tariff_list,
                     ),
                 )
                 logger.info(
-                    f"Successfully created tariff with id {date_accession.id} for published_at {published_at}.",  # noqa: E501
+                    f"Successfully created tariffs for published_at {published_at}.",
                 )
+
+                message = self._create_message(
+                    ActionType.CREATE_TARIFF,
+                    str(example_user_id),
+                )
+                await self._kafka_producer.send_message(message)
+
             except SQLAlchemyError as e:
                 logger.exception(f"Database error occurred while adding tariff: {e}")
                 raise HTTPException(status_code=500, detail="Database error occurred")
@@ -75,15 +95,11 @@ class TariffService:
         logger.info(f"Created {len(response_tariffs)} tariffs successfully.")
         return response_tariffs
 
-    async def _add_tariff(self, tariff_list: list[TariffBase], tariff_date_id: str):
-        for tariff in tariff_list:
-            await self._tariff_repo.add_tariff(tariff, tariff_date_id)
-
     async def upload_tariff(self, file: UploadFile) -> list[TariffResponse]:
         contents = await file.read()
-        date_tariff = RateFileProcessor.process_file(contents)
+        tariffs_data = TariffFileProcessor.process_file(contents)
         logger.info(f"Tariff file {file.filename} uploaded and processed.")
-        return await self.create_tariff(date_tariff)
+        return await self.create_tariff(tariffs_data)
 
     async def calculate_insurance_cost(self, request: InsuranceCostRequest) -> float:
         result = await self._tariff_repo.get_tariff(
@@ -104,6 +120,10 @@ class TariffService:
         logger.info(
             f"Insurance cost calculated: {insurance_cost} for declared value: {request.declared_value} and rate: {result.rate}.",  # noqa: E501
         )
+
+        message = self._create_message(ActionType.CALCULATE_INSURANCE_COST)
+        await self._kafka_producer.send_message(message)
+
         return InsuranceCostResponse(
             declared_value=request.declared_value,
             category_type=request.category_type,
@@ -133,6 +153,10 @@ class TariffService:
             f"Tariff with ID {tariff_id} updated successfully: {updated_tariff}.",
         )
 
+        message = self._create_message(ActionType.UPDATE_TARIFF)
+
+        await self._kafka_producer.send_message(message)
+
         return TariffResponse(
             id=updated_tariff.id,
             published_at=tariff.date_accession.published_at,
@@ -151,5 +175,9 @@ class TariffService:
             raise HTTPException(status_code=404, detail="Tariff not found")
 
         await self._tariff_repo.delete_tariff(tariff)
+
+        message = self._create_message(ActionType.DELETE_TARIFF)
+        await self._kafka_producer.send_message(message)
+
         logger.info(f"Tariff with ID {tariff_id} has been deleted successfully.")
         return {"message": f"Tariff with ID {tariff_id} has been deleted."}

@@ -13,24 +13,28 @@ class TariffRepo:
     def __init__(self, db: Db):
         self._db = db
 
-    async def add_date_accession(self, date_accession: date) -> DateAccession:
+    async def add_tariffs_with_date_accession(
+        self,
+        date_accession: date,
+        tariffs: list[TariffBase],
+    ) -> list[Tariff]:
         async with self._db.get_session() as session:
-            date_accession = DateAccession(published_at=date_accession)
-            session.add(date_accession)
+            date_accession_model = DateAccession(published_at=date_accession)
+            session.add(date_accession_model)
             await session.flush()
-            return date_accession
 
-    async def add_tariff(self, tariff: TariffBase, tariff_date_id: UUID) -> Tariff:
-        async with self._db.get_session() as session:
-            rate_model = Tariff(
-                category_type=tariff.category_type,
-                rate=tariff.rate,
-                date_accession_id=tariff_date_id,
-            )
-            session.add(rate_model)
-            await session.flush()
+            tariff_models = []
+            for tariff in tariffs:
+                rate_model = Tariff(
+                    category_type=tariff.category_type,
+                    rate=tariff.rate,
+                    date_accession_id=date_accession_model.id,
+                )
+                session.add(rate_model)
+                tariff_models.append(rate_model)
+
             await session.commit()
-            return rate_model
+            return tariff_models
 
     async def get_tariff(self, effective_date: date, category_type: str):
         async with self._db.get_session() as session:

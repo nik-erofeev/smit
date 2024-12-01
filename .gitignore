@@ -5,6 +5,7 @@ env
 __pycache__
 .env
 .env_local
+.zookeeper
 
 #/certs
 

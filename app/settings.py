@@ -7,8 +7,18 @@ from pyhocon import ConfigFactory  # type: ignore
 from app.utils.db import DbConfig
 
 
+class KafkaConfig(BaseModel):
+    host: str
+    port: int
+
+    @property
+    def bootstrap_servers(self) -> str:
+        return f"{self.host}:{self.port}"
+
+
 class AppConfig(BaseModel):
     bd: DbConfig
+    kafka: KafkaConfig
 
     @classmethod
     def create(cls) -> "AppConfig":
