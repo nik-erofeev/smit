@@ -1,4 +1,3 @@
-import logging
 import os
 from pathlib import Path
 
@@ -6,19 +5,6 @@ from pydantic import BaseModel
 from pyhocon import ConfigFactory  # type: ignore
 
 from app.utils.db import DbConfig
-
-
-DEFAULT_LOG_FORMAT = (
-    "%(funcName)10s %(module)s:%(lineno)d %(levelname)-8s - %(message)s"
-)
-
-
-def configure_logging(level: int = logging.INFO) -> None:
-    logging.basicConfig(
-        level=level,
-        datefmt="%Y-%m-%d %H:%M:%S",
-        format=DEFAULT_LOG_FORMAT,
-    )
 
 
 class AppConfig(BaseModel):

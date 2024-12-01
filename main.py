@@ -3,7 +3,8 @@ import asyncio
 import uvicorn
 from fastapi.responses import JSONResponse
 
-from app.applications import Application, logger
+from app.applications import Application
+from loguru import logger
 from app.bootstrap import bootstrap
 from app.settings import APP_CONFIG
 

@@ -1,14 +1,11 @@
 import contextlib
-import logging
+from loguru import logger
 from collections.abc import AsyncIterator
 
 from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, declared_attr
-
-
-logger = logging.getLogger(__name__)
 
 
 class DbConfig(BaseModel):

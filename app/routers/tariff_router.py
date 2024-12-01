@@ -1,4 +1,3 @@
-import logging
 from datetime import date
 from uuid import UUID
 
@@ -18,8 +17,6 @@ from app.routers.example_descriptions import (
     delete_tariff_description,
 )
 from app.services.tariff_service import TariffService
-
-logger = logging.getLogger(__name__)
 
 
 class TariffRouter:
