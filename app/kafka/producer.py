@@ -4,13 +4,15 @@ from aiokafka import AIOKafkaProducer
 from aiokafka.admin import AIOKafkaAdminClient, NewTopic
 from loguru import logger
 
+from app.settings import APP_CONFIG
+
 
 class KafkaProducer:
     def __init__(self, bootstrap_servers: str, default_topic: str = "default_actions"):
         self.bootstrap_servers = bootstrap_servers
         self.producer = None
         self.admin_client = None
-        self.batch_size = 2
+        self.batch_size = APP_CONFIG.kafka.batch_size
         self.batch = []
         self.default_topic = default_topic
 

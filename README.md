@@ -71,3 +71,6 @@ http://localhost:8000/docs
 http://localhost:8090
 ```
 
+<br>
+
+#### json файл для загрузки в API  [exa.json](./exa.json).

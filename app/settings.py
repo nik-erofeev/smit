@@ -10,6 +10,7 @@ from app.utils.db import DbConfig
 class KafkaConfig(BaseModel):
     host: str
     port: int
+    batch_size: int = 2
 
     @property
     def bootstrap_servers(self) -> str:
