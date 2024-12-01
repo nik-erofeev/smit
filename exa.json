@@ -1,22 +1,22 @@
 {
-  "2020-06-01": [
-    {
-      "category_type": "Glass",
-      "rate": "0.04"
-    },
-    {
-      "category_type": "Other",
-      "rate": "0.01"
-    }
-  ],
-  "2020-07-01": [
-    {
-      "category_type": "Glass",
-      "rate": "0.035"
-    },
-    {
-      "category_type": "Other",
-      "rate": "0.015"
-    }
-  ]
+    "2020-06-01": [
+        {
+            "category_type": "Glass",
+            "rate": "0.04"
+        },
+        {
+            "category_type": "Other",
+            "rate": "0.01"
+        }
+    ],
+    "2020-07-01": [
+        {
+            "category_type": "Glass",
+            "rate": "0.035"
+        },
+        {
+            "category_type": "Other",
+            "rate": "0.015"
+        }
+    ]
 }

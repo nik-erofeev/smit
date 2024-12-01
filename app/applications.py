@@ -2,7 +2,7 @@ import logging
 
 from fastapi import FastAPI
 
-from app.routers.rate_router import RateRouter
+from app.routers.rate_router import TariffRouter
 from app.settings import AppConfig
 from app.utils.db import Db
 
@@ -15,7 +15,7 @@ class Application:
         self,
         config: AppConfig,
         db: Db,
-        rate: RateRouter,
+        rate: TariffRouter,
     ):
         self._config = config
         self._db = db
@@ -30,7 +30,7 @@ class Application:
         async def on_shutdown() -> None:
             await self._db.shutdown()
 
-        server.include_router(self._rate.api_route, prefix="/rates", tags=["Рейтинг"])
+        server.include_router(self._rate.api_route, prefix="/tariffs", tags=["Тарифы"])
 
     @property
     def app(self) -> FastAPI:

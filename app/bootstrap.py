@@ -1,8 +1,8 @@
 from punq import Container, Scope
 
-from app.repositories.rate_repository import RateRepo
-from app.routers.rate_router import RateRouter
-from app.services.rate_service import RateService
+from app.repositories.tariff_repository import TariffRepo
+from app.routers.rate_router import TariffRouter
+from app.services.tariff_service import TariffService
 from app.settings import AppConfig
 from app.utils.db import Db, DbConfig
 
@@ -13,9 +13,9 @@ def bootstrap(app_config: AppConfig) -> Container:
     container.register(DbConfig, instance=app_config.bd, scope=Scope.singleton)
     container.register(Db, Db, scope=Scope.singleton)
 
-    container.register(RateRepo)
-    container.register(RateService)
-    container.register(RateRouter)
+    container.register(TariffRepo)
+    container.register(TariffService)
+    container.register(TariffRouter)
 
     # container.register(TaskRepo)
     # container.register(TasksServie)

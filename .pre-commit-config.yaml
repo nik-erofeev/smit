@@ -1,4 +1,3 @@
-fail_fast: false
 exclude: ^.*\b(migrations|docker|grafana-dashboard.json)\b.*$
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -12,7 +11,7 @@ repos:
       - id: pretty-format-json
         args: [
           --autofix,
-          --indent 4,
+          "--indent", "4",
         ]
       - id: trailing-whitespace
       - id: no-commit-to-branch

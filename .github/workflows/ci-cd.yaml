@@ -1,4 +1,4 @@
-name: My_actions
+name: lint
 
 on:
   push:

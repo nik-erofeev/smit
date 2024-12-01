@@ -8,7 +8,9 @@ from pyhocon import ConfigFactory  # type: ignore
 from app.utils.db import DbConfig
 
 
-DEFAULT_LOG_FORMAT = "%(funcName)10s %(module)s:%(lineno)d %(levelname)-8s - %(message)s"
+DEFAULT_LOG_FORMAT = (
+    "%(funcName)10s %(module)s:%(lineno)d %(levelname)-8s - %(message)s"
+)
 
 
 def configure_logging(level: int = logging.INFO) -> None:
