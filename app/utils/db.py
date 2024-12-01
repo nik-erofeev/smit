@@ -1,7 +1,7 @@
 import contextlib
-from loguru import logger
 from collections.abc import AsyncIterator
 
+from loguru import logger
 from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import async_sessionmaker, AsyncSession, create_async_engine

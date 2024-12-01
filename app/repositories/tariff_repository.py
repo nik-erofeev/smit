@@ -5,7 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import joinedload
 
 from app.models.tariff import TariffBase
-from app.orm_models import Tariff, DateAccession
+from app.orm_models import DateAccession, Tariff
 from app.utils.db import Db
 
 

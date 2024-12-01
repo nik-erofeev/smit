@@ -1,20 +1,20 @@
 from datetime import date
 from uuid import UUID
 
-from fastapi import APIRouter, Body, UploadFile, File, Path
+from fastapi import APIRouter, Body, File, Path, UploadFile
 from fastapi.responses import ORJSONResponse
 
 from app.models.tariff import (
-    TariffResponse,
-    TariffBase,
     InsuranceCostRequest,
     InsuranceCostResponse,
+    TariffBase,
+    TariffResponse,
 )
 from app.routers.example_descriptions import (
-    calculate_request_example,
     add_tariff_request_example,
-    update_tariff_description,
+    calculate_request_example,
     delete_tariff_description,
+    update_tariff_description,
 )
 from app.services.tariff_service import TariffService
 

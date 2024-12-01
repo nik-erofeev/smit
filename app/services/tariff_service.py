@@ -1,16 +1,16 @@
 import json
-from loguru import logger
 from datetime import date
 from uuid import UUID
 
 from fastapi import HTTPException, UploadFile
+from loguru import logger
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.models.tariff import (
-    TariffResponse,
-    TariffBase,
     InsuranceCostRequest,
     InsuranceCostResponse,
+    TariffBase,
+    TariffResponse,
 )
 from app.repositories.tariff_repository import TariffRepo
 
@@ -63,7 +63,7 @@ class TariffService:
                     ),
                 )
                 logger.info(
-                    f"Successfully created tariff with id {date_accession.id} for published_at {published_at}.",
+                    f"Successfully created tariff with id {date_accession.id} for published_at {published_at}.",  # noqa: E501
                 )
             except SQLAlchemyError as e:
                 logger.exception(f"Database error occurred while adding tariff: {e}")
@@ -93,7 +93,7 @@ class TariffService:
 
         if result is None:
             logger.warning(
-                f"Rate not found for the given date {request.published_at} and category type: {request.category_type}.",
+                f"Rate not found for the given date {request.published_at} and category type: {request.category_type}.",  # noqa: E501
             )
             raise HTTPException(
                 status_code=404,
@@ -102,7 +102,7 @@ class TariffService:
 
         insurance_cost = request.declared_value * result.rate
         logger.info(
-            f"Insurance cost calculated: {insurance_cost} for declared value: {request.declared_value} and rate: {result.rate}.",
+            f"Insurance cost calculated: {insurance_cost} for declared value: {request.declared_value} and rate: {result.rate}.",  # noqa: E501
         )
         return InsuranceCostResponse(
             declared_value=request.declared_value,

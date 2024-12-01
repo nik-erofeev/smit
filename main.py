@@ -2,12 +2,11 @@ import asyncio
 
 import uvicorn
 from fastapi.responses import JSONResponse
+from loguru import logger
 
 from app.applications import Application
-from loguru import logger
 from app.bootstrap import bootstrap
 from app.settings import APP_CONFIG
-
 
 container = bootstrap(APP_CONFIG)
 container.register(Application)

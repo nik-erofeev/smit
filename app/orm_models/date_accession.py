@@ -1,9 +1,9 @@
 from datetime import date
 
-from app import orm_models
 from sqlalchemy import Date, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app import orm_models
 from app.orm_models import IdMixin
 from app.utils.db import Base
 

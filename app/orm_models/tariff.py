@@ -1,9 +1,9 @@
 import uuid
 
-from app import orm_models
-from sqlalchemy import String, Float, ForeignKey
+from sqlalchemy import Float, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app import orm_models
 from app.orm_models import IdMixin
 from app.utils.db import Base
 
