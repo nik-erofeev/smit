@@ -17,6 +17,11 @@ services:
       - custom
     ports:
       - "15432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_NAME} -d ${DB_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
   api:
     build:
@@ -32,6 +37,11 @@ services:
       - '8000:8000'
     networks:
       - custom
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/default/ready" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
 
 

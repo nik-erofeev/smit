@@ -14,6 +14,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /smit_app
 
+RUN apt-get update && apt-get install -y curl && apt-get clean
+
 COPY app /smit_app/app
 COPY docker /smit_app/docker
 COPY migrations /smit_app/migrations

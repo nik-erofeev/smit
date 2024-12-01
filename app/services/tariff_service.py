@@ -25,7 +25,7 @@ class RateFileProcessor:
                 effective_date = date.fromisoformat(date_str)
                 rate_objects = [TariffBase(**rate) for rate in rate_list]
                 date_rates[effective_date] = rate_objects
-                logger.debug(
+                logger.info(
                     f"Processed rates for date {effective_date}: {rate_objects}",
                 )
             return date_rates

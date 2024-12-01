@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 
+from app.routers.default_router import DefaultRouter
 from app.routers.tariff_router import TariffRouter
 from app.settings import AppConfig
 from app.utils.db import Db
@@ -10,10 +11,12 @@ class Application:
         self,
         config: AppConfig,
         db: Db,
+        default: DefaultRouter,
         rate: TariffRouter,
     ):
         self._config = config
         self._db = db
+        self._default = default
         self._rate = rate
 
     def setup(self, server: FastAPI) -> None:
@@ -24,6 +27,12 @@ class Application:
         @server.on_event("shutdown")
         async def on_shutdown() -> None:
             await self._db.shutdown()
+
+        server.include_router(
+            self._default.api_router,
+            prefix="/default",
+            tags=["Default"],
+        )
 
         server.include_router(
             self._rate.api_route,
