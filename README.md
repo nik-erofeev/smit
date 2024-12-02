@@ -66,7 +66,7 @@ http://localhost:8000/docs
 <br>
 
 #### Перейти на веб интерфейс kafka (topik) [http://localhost:8090](http://localhost:8090)
-в кафку отправляются по 2 батчам
+в кафку отправляются по 5 батчам(default), если не указать в env
 ```sh
 http://localhost:8090
 ```

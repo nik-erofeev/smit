@@ -14,7 +14,7 @@ class KafkaProducer:
         self.producer: AIOKafkaProducer | None = None
         self.admin_client: AIOKafkaAdminClient | None = None
         self.batch_size = APP_CONFIG.kafka.batch_size
-        self.batch: list[bytes] = []
+        self.batches: dict[str, list[bytes]] = {}
         self.default_topic = default_topic
 
     async def start(self) -> None:
@@ -38,8 +38,9 @@ class KafkaProducer:
         logger.info("Kafka producer connected to %s", self.bootstrap_servers)
 
     async def stop(self) -> None:
-        if self.batch:
-            await self.send_batch(self.default_topic)
+        for topic, batch in self.batches.items():
+            if batch:
+                await self.send_batch(topic)
         if self.producer is not None:
             await self.producer.stop()
             logger.info("Kafka producer disconnected")
@@ -53,21 +54,25 @@ class KafkaProducer:
     ) -> None:
         if topic is None:
             topic = self.default_topic
-        self.batch.append(json.dumps(message).encode("utf-8"))
 
-        if len(self.batch) >= self.batch_size:
+        if topic not in self.batches:
+            self.batches[topic] = []
+
+        self.batches[topic].append(json.dumps(message).encode("utf-8"))
+
+        if len(self.batches[topic]) >= self.batch_size:
             await self.send_batch(topic)
 
     async def send_batch(self, topic: str) -> None:
-        if self.batch:
+        if topic in self.batches and self.batches[topic]:
             if self.producer is None:
                 raise RuntimeError(
                     "Producer is not initialized. Call start() before sending messages",
                 )
 
-            for message in self.batch:
+            for message in self.batches[topic]:
                 await self.producer.send_and_wait(topic, message)
             logger.info(
-                f"Batch of {len(self.batch)} messages sent to Kafka topic '{topic}'",
+                f"Batch of {len(self.batches[topic])} messages sent to Kafka topic '{topic}.'",  # noqa: E501
             )
-            self.batch.clear()
+            self.batches[topic].clear()

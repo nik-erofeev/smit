@@ -35,6 +35,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.black]
+line-length = 88
 skip-string-normalization = true
 exclude = '''
 \\.git|__pycache__
@@ -47,8 +48,10 @@ exclude = '''
 |env
 '''
 
+[tool.ruff]
+line-length = 88
+
 [tool.flake8]
-max-line-length = 88
 exclude = '''
 .git,
 __pycache__,

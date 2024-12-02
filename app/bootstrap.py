@@ -15,7 +15,10 @@ def bootstrap(app_config: AppConfig) -> Container:
     container.register(DbConfig, instance=app_config.bd, scope=Scope.singleton)
     container.register(Db, Db, scope=Scope.singleton)
 
-    kafka_producer = KafkaProducer(bootstrap_servers=app_config.kafka.bootstrap_servers)
+    kafka_producer = KafkaProducer(
+        bootstrap_servers=app_config.kafka.bootstrap_servers,
+        default_topic=app_config.kafka.topik,
+    )
     container.register(KafkaProducer, instance=kafka_producer, scope=Scope.singleton)
 
     container.register(TariffRepo)
