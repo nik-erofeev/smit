@@ -1,5 +1,6 @@
 import json
 from datetime import date, datetime
+from typing import Any
 from uuid import UUID
 
 from fastapi import HTTPException, UploadFile
@@ -14,6 +15,7 @@ from app.models.tariff import (
     TariffBase,
     TariffResponse,
 )
+from app.orm_models import Tariff
 from app.repositories.tariff_repository import TariffRepo
 
 
@@ -48,7 +50,10 @@ class TariffService:
         self._kafka_producer = kafka_producer
 
     @staticmethod
-    def _create_message(action: ActionType, user_id: str = None) -> dict:
+    def _create_message(
+        action: ActionType,
+        user_id: str | None = None,
+    ) -> dict[str, Any]:
         return {
             "user_id": user_id,
             "action": action.value,
@@ -101,7 +106,10 @@ class TariffService:
         logger.info(f"Tariff file {file.filename} uploaded and processed.")
         return await self.create_tariff(tariffs_data)
 
-    async def calculate_insurance_cost(self, request: InsuranceCostRequest) -> float:
+    async def calculate_insurance_cost(
+        self,
+        request: InsuranceCostRequest,
+    ) -> InsuranceCostResponse:
         result = await self._tariff_repo.get_tariff(
             request.published_at,
             request.category_type,
@@ -132,23 +140,23 @@ class TariffService:
             insurance_cost=insurance_cost,
         )
 
-    async def get_tariff_by_id(self, tariff_id: UUID):
+    async def get_tariff_by_id(self, tariff_id: UUID) -> Tariff | None:
         return await self._tariff_repo.get_tariff_by_id(tariff_id)
 
     async def update_tariff(
         self,
         tariff_id: UUID,
-        updated_tariff: TariffBase,
+        new_tariff: TariffBase,
     ) -> TariffResponse:
-        tariff = await self.get_tariff_by_id(tariff_id)
+        old_tariff = await self.get_tariff_by_id(tariff_id)
 
-        if not tariff:
+        if not old_tariff:
             logger.warning(f"Tariff with ID {tariff_id} not found.")
             raise HTTPException(status_code=404, detail="Tariff not found")
 
-        tariff.category_type = updated_tariff.category_type
-        tariff.rate = updated_tariff.rate
-        updated_tariff = await self._tariff_repo.update_tariff(tariff)
+        old_tariff.category_type = new_tariff.category_type
+        old_tariff.rate = new_tariff.rate
+        updated_tariff = await self._tariff_repo.update_tariff(old_tariff)
         logger.info(
             f"Tariff with ID {tariff_id} updated successfully: {updated_tariff}.",
         )
@@ -159,7 +167,7 @@ class TariffService:
 
         return TariffResponse(
             id=updated_tariff.id,
-            published_at=tariff.date_accession.published_at,
+            published_at=old_tariff.date_accession.published_at,
             tariffs=[
                 TariffBase(
                     category_type=updated_tariff.category_type,
@@ -168,7 +176,7 @@ class TariffService:
             ],
         )
 
-    async def delete_tariff(self, tariff_id: UUID) -> None:
+    async def delete_tariff(self, tariff_id: UUID) -> dict[str, str]:
         tariff = await self.get_tariff_by_id(tariff_id)
         if not tariff:
             logger.warning(f"Tariff with ID {tariff_id} not found.")

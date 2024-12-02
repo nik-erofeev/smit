@@ -36,7 +36,11 @@ class TariffRepo:
             await session.commit()
             return tariff_models
 
-    async def get_tariff(self, effective_date: date, category_type: str):
+    async def get_tariff(
+        self,
+        effective_date: date,
+        category_type: str,
+    ) -> Tariff | None:
         async with self._db.get_session() as session:
             result = await session.execute(
                 select(Tariff)
@@ -49,7 +53,7 @@ class TariffRepo:
             )
             return result.scalars().first()
 
-    async def get_tariff_by_id(self, tariff_id: UUID):
+    async def get_tariff_by_id(self, tariff_id: UUID) -> Tariff | None:
         async with self._db.get_session() as session:
             result = await session.execute(
                 select(Tariff)

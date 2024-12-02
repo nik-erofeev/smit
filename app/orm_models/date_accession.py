@@ -9,7 +9,7 @@ from app.utils.db import Base
 
 
 class DateAccession(IdMixin, Base):
-    __tablename__ = "date_accessions"
+    __tablename__ = "date_accessions"  # type: ignore
 
     published_at: Mapped[date] = mapped_column(
         Date,

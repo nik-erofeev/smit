@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 
 from pydantic import BaseModel
-from pyhocon import ConfigFactory  # type: ignore
+from pyhocon import ConfigFactory
 
 from app.utils.db import DbConfig
 

@@ -1,6 +1,7 @@
 import asyncio
 
 import uvicorn
+from fastapi import Request
 from fastapi.responses import JSONResponse
 from loguru import logger
 
@@ -16,7 +17,7 @@ app = application.app
 
 
 @app.exception_handler(Exception)
-async def http_exception_handler(request, exc):
+async def http_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     logger.exception("Unexpected error occurred")
     return JSONResponse(status_code=500, content={"detail": "internal server error"})
 

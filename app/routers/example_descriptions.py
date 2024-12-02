@@ -1,3 +1,5 @@
+from typing import Any
+
 calculate_request_example = {
     "declared_value": 1000.0,
     "category_type": "Glass",
@@ -16,7 +18,7 @@ add_tariff_request_example = {
     ],
 }
 
-update_tariff_description = {
+update_tariff_description: dict[str, dict[str, Any]] = {
     "tariff_id": {
         "example": "da73f1ac-ae75-42e1-a9dd-321ede80e2e6",
         "description": "The uuid of the tariff to update",
@@ -31,7 +33,7 @@ update_tariff_description = {
 }
 
 
-delete_tariff_description = {
+delete_tariff_description: dict[str, Any] = {
     "example": "da73f1ac-ae75-42e1-a9dd-321ede80e2e6",
     "description": "The uuid of the tariff to delete",
 }

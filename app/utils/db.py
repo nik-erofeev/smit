@@ -24,7 +24,7 @@ class Base(DeclarativeBase):
     def __tablename__(cls) -> str:
         return f"{cls.__name__.lower()}s"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """
         Печать орм-объектов с отображением атрибутов
         """
@@ -38,7 +38,7 @@ class Base(DeclarativeBase):
 
 
 class Db:
-    def __init__(self, config: DbConfig):
+    def __init__(self, config: DbConfig) -> None:
         self._config = config
         self._engine = create_async_engine(
             url=config.dsn,
@@ -49,11 +49,11 @@ class Db:
 
         self._sessionmaker = async_sessionmaker(self._engine, expire_on_commit=False)
 
-    async def _create_table(self):
+    async def _create_table(self) -> None:
         async with self._engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
 
-    async def _delete_table(self):
+    async def _delete_table(self) -> None:
         async with self._engine.begin() as conn:
             await conn.run_sync(Base.metadata.drop_all)
 
@@ -71,7 +71,7 @@ class Db:
             else:
                 await session.commit()
 
-    async def start(self):
+    async def start(self) -> None:
         logger.info("Initializing database connection...")
         # await self._delete_table()  # Очистка БД перед стартом
         # await self._create_table()  # Создание новых таблиц в БД
@@ -79,6 +79,6 @@ class Db:
             await conn.execute(text("SELECT 1"))
         logger.info("Database connection initialized successfully.")
 
-    async def shutdown(self):
+    async def shutdown(self) -> None:
         logger.info("Shutting down database connection...")
         await self._engine.dispose()

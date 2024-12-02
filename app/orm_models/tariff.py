@@ -9,7 +9,7 @@ from app.utils.db import Base
 
 
 class Tariff(IdMixin, Base):
-    __tablename__ = "tariffs"
+    __tablename__ = "tariffs"  # type: ignore
 
     category_type: Mapped[str] = mapped_column(String(32))
     rate: Mapped[float] = mapped_column(Float)

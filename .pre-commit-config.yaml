@@ -42,3 +42,11 @@ repos:
     hooks:
     - id: isort
       name: isort (python)
+
+  - repo: local
+    hooks:
+      - id: mypy
+        name: Run mypy via make
+        entry: make mypy
+        language: system
+        types: [ python ]

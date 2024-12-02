@@ -29,7 +29,7 @@ class TariffRouter:
         self._register(router)
         return router
 
-    def _register(self, router: APIRouter):
+    def _register(self, router: APIRouter) -> None:
         @router.post(
             "/",
             response_model=list[TariffResponse],
@@ -41,7 +41,7 @@ class TariffRouter:
                 ...,
                 example=add_tariff_request_example,
             ),
-        ):
+        ) -> list[TariffResponse]:
             return await self._tariff_service.create_tariff(tariff)
 
         @router.post(
@@ -50,7 +50,7 @@ class TariffRouter:
             response_class=ORJSONResponse,
             status_code=201,
         )
-        async def upload_tariffs(file: UploadFile = File(...)):
+        async def upload_tariffs(file: UploadFile = File(...)) -> list[TariffResponse]:
             return await self._tariff_service.upload_tariff(file)
 
         @router.post(
@@ -64,7 +64,7 @@ class TariffRouter:
                 ...,
                 example=calculate_request_example,
             ),
-        ):
+        ) -> InsuranceCostResponse:
             return await self._tariff_service.calculate_insurance_cost(request)
 
         @router.put(
@@ -82,7 +82,7 @@ class TariffRouter:
                 ...,
                 **update_tariff_description["updated_tariff"],
             ),
-        ):
+        ) -> TariffResponse:
             return await self._tariff_service.update_tariff(tariff_id, updated_tariff)
 
         @router.delete(
@@ -95,6 +95,6 @@ class TariffRouter:
                 ...,
                 **delete_tariff_description,
             ),
-        ):
+        ) -> ORJSONResponse:
             result = await self._tariff_service.delete_tariff(tariff_id)
             return ORJSONResponse(content=result, status_code=200)

@@ -16,14 +16,14 @@ class DefaultRouter:
         self._register(router)
         return router
 
-    def _register(self, router: APIRouter):
+    def _register(self, router: APIRouter) -> None:
         @router.get("/ping", include_in_schema=False)
-        async def _ping():
+        async def _ping() -> str:
             logger.debug("ping")
             return "pong"
 
         @router.get("/ready", include_in_schema=False)
-        async def _ready():
+        async def _ready() -> bool:
             logger.debug("ready")
             try:
                 logger.debug("testing db")

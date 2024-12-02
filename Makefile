@@ -9,3 +9,7 @@ down:
 
 up_local:
 	docker compose -f docker-compose.yml up -d postgres zookeeper kafka kafka-ui
+
+mypy:
+	@echo mypy .
+	mypy . --exclude 'venv|migrations'
