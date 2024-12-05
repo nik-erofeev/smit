@@ -33,7 +33,11 @@ class KafkaProducer:
             await self.admin_client.create_topics([new_topic])
             logger.info(f"Topic '{self.default_topic}' created.")
 
-        self.producer = AIOKafkaProducer(bootstrap_servers=self.bootstrap_servers)
+        self.producer = AIOKafkaProducer(
+            bootstrap_servers=self.bootstrap_servers,
+            acks="all",
+            enable_idempotence=True,
+        )
         await self.producer.start()
         logger.info("Kafka producer connected to %s", self.bootstrap_servers)
 
