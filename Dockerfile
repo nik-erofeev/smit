@@ -14,7 +14,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /smit_app
 
-RUN apt-get update && apt-get install -y curl && apt-get clean
+# netcat-openbsd для ожидания kafka в app.sh (nc -z kafka 9092)
+RUN apt-get update && apt-get install -y curl netcat-openbsd && apt-get clean
 
 COPY app /smit_app/app
 COPY docker /smit_app/docker
