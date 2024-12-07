@@ -1,5 +1,6 @@
 import sentry_sdk
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 
 from app.kafka.producer import KafkaProducer
@@ -35,6 +36,15 @@ class Application:
         async def on_shutdown() -> None:
             await self._db.shutdown()
             await self._kafka_producer.stop()
+
+        if cors_origin_regex := self._config.cors_origin_regex:
+            server.add_middleware(
+                CORSMiddleware,
+                allow_origin_regex=cors_origin_regex,
+                allow_credentials=True,
+                allow_methods=["*"],
+                allow_headers=["*"],
+            )
 
         if sentry_dsn := self._config.sentry_dsn:
             sentry_sdk.init(sentry_dsn)

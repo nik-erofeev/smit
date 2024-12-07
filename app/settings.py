@@ -28,6 +28,7 @@ class AppConfig(BaseModel):
     kafka: KafkaConfig
     sentry_dsn: str | None = None
     tg: TGConfig = TGConfig()
+    cors_origin_regex: str
 
     @classmethod
     def create(cls) -> "AppConfig":
