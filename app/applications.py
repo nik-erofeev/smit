@@ -1,6 +1,7 @@
 import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
 
 from app.kafka.producer import KafkaProducer
@@ -36,6 +37,10 @@ class Application:
         async def on_shutdown() -> None:
             await self._db.shutdown()
             await self._kafka_producer.stop()
+
+        @server.get("/favicon.ico")
+        async def _favicon():
+            return FileResponse("favicon.ico")
 
         if cors_origin_regex := self._config.cors_origin_regex:
             server.add_middleware(
