@@ -7,6 +7,11 @@ from pyhocon import ConfigFactory
 from app.utils.db import DbConfig
 
 
+class TGConfig(BaseModel):
+    token: str = ""
+    chat_id: str = ""
+
+
 class KafkaConfig(BaseModel):
     host: str
     port: int
@@ -21,6 +26,8 @@ class KafkaConfig(BaseModel):
 class AppConfig(BaseModel):
     bd: DbConfig
     kafka: KafkaConfig
+    sentry_dsn: str | None = None
+    tg: TGConfig = TGConfig()
 
     @classmethod
     def create(cls) -> "AppConfig":

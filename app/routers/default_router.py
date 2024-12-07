@@ -1,3 +1,5 @@
+from typing import Any
+
 from fastapi import APIRouter, HTTPException
 from loguru import logger
 from sqlalchemy import text
@@ -34,3 +36,12 @@ class DefaultRouter:
             logger.debug("pg ready")
 
             return True
+
+        @router.get("/exception", include_in_schema=True)
+        async def _exception() -> Any:
+            """Роутер для отправки триггеров в sentry и ТГ
+            (если переданы креды в env)"""
+            try:
+                return 1 / 0
+            except ZeroDivisionError as e:
+                logger.error(f"Use exception {e=!r}")
