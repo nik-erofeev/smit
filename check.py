@@ -3,7 +3,7 @@ import asyncio
 from app.kafka.producer import KafkaProducer
 
 
-async def test_kafka_producer():
+async def test_kafka_producer() -> None:
     producer = KafkaProducer(
         bootstrap_servers="localhost:29092",
         default_topic="default",
