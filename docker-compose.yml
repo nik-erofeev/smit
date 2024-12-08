@@ -1,5 +1,3 @@
-version: '3'
-
 services:
   postgres:
     container_name: "postgres"
@@ -18,10 +16,20 @@ services:
     ports:
       - "15432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_NAME} -d ${DB_DB}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_NAME} -d ${DB_DB}" ]
       interval: 10s
       timeout: 5s
       retries: 3
+
+  postgres_exporter:
+    container_name: "postgres_exporter"
+    image: wrouesnel/postgres_exporter:latest
+    environment:
+      DATA_SOURCE_NAME: "postgres://${DB_NAME}:${DB_PASS}@postgres:5432/${DB_DB}?sslmode=disable"
+    ports:
+      - '9187:9187'
+    networks:
+      - custom
 
   zookeeper:
     container_name: "zookeeper"
@@ -73,6 +81,7 @@ services:
 
 
   api:
+    container_name: "smit-api"
     build:
       context: .
       dockerfile: Dockerfile
@@ -93,10 +102,38 @@ services:
       timeout: 5s
       retries: 3
 
+  prometheus:
+    platform: linux/x86_64
+    container_name: "smit-prometheus"
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - '19090:9090'
+    networks:
+      - custom
+
+  grafana:
+    platform: linux/x86_64
+    container_name: "smit-grafana"
+    image: grafana/grafana-oss:latest
+    ports:
+      - '13000:3000'
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+    networks:
+      - custom
+
+
+
+
 networks:
   custom:
     driver: bridge
 
 volumes:
   postgres_storage_new:
+    driver: local
+  grafana_data:
     driver: local

@@ -2,7 +2,9 @@ import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from prometheus_client.exposition import make_asgi_app
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
+from starlette_prometheus import PrometheusMiddleware
 
 from app.kafka.producer import KafkaProducer
 from app.routers.default_router import DefaultRouter
@@ -55,6 +57,9 @@ class Application:
             sentry_sdk.init(sentry_dsn)
             server.add_middleware(SentryAsgiMiddleware)
             custom_logger.add(self._sentry_handler, level="ERROR")
+
+        server.add_middleware(PrometheusMiddleware, filter_unhandled_paths=True)
+        server.mount("/metrics", make_asgi_app())
 
         server.include_router(
             self._default.api_router,
