@@ -22,6 +22,7 @@ COPY docker /smit_app/docker
 COPY migrations /smit_app/migrations
 COPY main.py ./
 COPY alembic.ini ./
+COPY favicon.ico ./
 COPY pyproject.toml poetry.lock* ./
 
 

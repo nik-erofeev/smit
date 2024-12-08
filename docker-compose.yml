@@ -24,10 +24,13 @@ services:
   postgres_exporter:
     container_name: "postgres_exporter"
     image: wrouesnel/postgres_exporter:latest
+    restart: unless-stopped
     environment:
       DATA_SOURCE_NAME: "postgres://${DB_NAME}:${DB_PASS}@postgres:5432/${DB_DB}?sslmode=disable"
     ports:
       - '9187:9187'
+    depends_on:
+      - postgres
     networks:
       - custom
 
@@ -35,6 +38,7 @@ services:
     container_name: "zookeeper"
     platform: linux/x86_64
     image: confluentinc/cp-zookeeper:latest
+    restart: unless-stopped
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -47,6 +51,7 @@ services:
     container_name: "kafka"
     platform: linux/x86_64
     image: confluentinc/cp-kafka:latest
+    restart: unless-stopped
     depends_on:
       - zookeeper
     ports:
@@ -66,15 +71,14 @@ services:
   kafka-ui:
     container_name: "kafka-ui"
     image: provectuslabs/kafka-ui
+    restart: unless-stopped
     ports:
       - "8090:8080"
-    restart: always
     environment:
       - KAFKA_CLUSTERS_0_NAME=local
       - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
       - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper:2181
     depends_on:
-      - zookeeper
       - kafka
     networks:
       - custom
@@ -106,26 +110,34 @@ services:
     platform: linux/x86_64
     container_name: "smit-prometheus"
     image: prom/prometheus:latest
+    restart: unless-stopped
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
     ports:
       - '19090:9090'
     networks:
       - custom
+    depends_on:
+      - api
 
   grafana:
     platform: linux/x86_64
     container_name: "smit-grafana"
     image: grafana/grafana-oss:latest
+#    image: grafana/grafana:latest
+    restart: unless-stopped
     ports:
       - '13000:3000'
     volumes:
       - grafana_data:/var/lib/grafana
-
+      - grafana-config:/etc/grafana
     networks:
       - custom
-
-
+    depends_on:
+      - prometheus
 
 
 networks:
@@ -136,4 +148,8 @@ volumes:
   postgres_storage_new:
     driver: local
   grafana_data:
+    driver: local
+  grafana-config:
+    driver: local
+  prometheus-data:
     driver: local
