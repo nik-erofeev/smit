@@ -17,7 +17,7 @@ from app import orm_models
 config = context.config
 
 section = config.config_ini_section
-config.set_section_option(section, "DB_URL", APP_CONFIG.bd.dsn)
+config.set_section_option(section, "DB_URL", APP_CONFIG.db.dsn)
 
 
 # Interpret the config file for Python logging.
