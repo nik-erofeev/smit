@@ -12,7 +12,7 @@ from app.utils.db import Db, DbConfig
 def bootstrap(app_config: AppConfig) -> Container:
     container = Container()
     container.register(AppConfig, instance=app_config)
-    container.register(DbConfig, instance=app_config.bd, scope=Scope.singleton)
+    container.register(DbConfig, instance=app_config.db, scope=Scope.singleton)
     container.register(Db, Db, scope=Scope.singleton)
 
     kafka_producer = KafkaProducer(

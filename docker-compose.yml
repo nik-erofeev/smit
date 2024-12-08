@@ -1,32 +1,46 @@
-version: '3'
-
 services:
   postgres:
     container_name: "postgres"
     image: postgres:16
     restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${DB_NAME}
-      POSTGRES_PASSWORD: ${DB_PASS}
-      POSTGRES_DB: ${DB_DB}
+    env_file:
+      - .env.compose.pg
     volumes:
       - postgres_storage_new:/var/lib/postgresql/data
-    env_file:
-      - .env
     networks:
       - custom
     ports:
       - "15432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_NAME} -d ${DB_DB}"]
+      # # todo подтянуть из енвов
+#      test: [ "CMD-SHELL", "pg_isready -U ${DB_NAME} -d ${DB_DB}" ]
+      test: [ "CMD-SHELL", "pg_isready -U user -d dbpass" ]
       interval: 10s
       timeout: 5s
       retries: 3
+
+  postgres_exporter:
+    container_name: "postgres_exporter"
+    image: wrouesnel/postgres_exporter:latest
+    restart: unless-stopped
+    env_file:
+      - .env.compose.pg
+    environment:
+      # todo подтянуть из енвов
+#      DATA_SOURCE_NAME: "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable"
+      DATA_SOURCE_NAME: "postgres://user:dbpass@postgres:5432/smit_db?sslmode=disable"
+    ports:
+      - '9187:9187'
+    depends_on:
+      - postgres
+    networks:
+      - custom
 
   zookeeper:
     container_name: "zookeeper"
     platform: linux/x86_64
     image: confluentinc/cp-zookeeper:latest
+    restart: unless-stopped
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -39,6 +53,7 @@ services:
     container_name: "kafka"
     platform: linux/x86_64
     image: confluentinc/cp-kafka:latest
+    restart: unless-stopped
     depends_on:
       - zookeeper
     ports:
@@ -58,21 +73,21 @@ services:
   kafka-ui:
     container_name: "kafka-ui"
     image: provectuslabs/kafka-ui
+    restart: unless-stopped
     ports:
       - "8090:8080"
-    restart: always
     environment:
       - KAFKA_CLUSTERS_0_NAME=local
       - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
       - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper:2181
     depends_on:
-      - zookeeper
       - kafka
     networks:
       - custom
 
 
   api:
+    container_name: "smit-api"
     build:
       context: .
       dockerfile: Dockerfile
@@ -93,10 +108,50 @@ services:
       timeout: 5s
       retries: 3
 
+  prometheus:
+    platform: linux/x86_64
+    container_name: "smit-prometheus"
+    image: prom/prometheus:latest
+    restart: unless-stopped
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - '19090:9090'
+    networks:
+      - custom
+    depends_on:
+      - api
+
+  grafana:
+    platform: linux/x86_64
+    container_name: "smit-grafana"
+    image: grafana/grafana-oss:latest
+#    image: grafana/grafana:latest
+    restart: unless-stopped
+    ports:
+      - '13000:3000'
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - grafana-config:/etc/grafana
+    networks:
+      - custom
+    depends_on:
+      - prometheus
+
+
 networks:
   custom:
     driver: bridge
 
 volumes:
   postgres_storage_new:
+    driver: local
+  grafana_data:
+    driver: local
+  grafana-config:
+    driver: local
+  prometheus-data:
     driver: local

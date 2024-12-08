@@ -1,6 +1,10 @@
 import sentry_sdk
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from prometheus_client.exposition import make_asgi_app
 from sentry_sdk.integrations.asgi import SentryAsgiMiddleware
+from starlette_prometheus import PrometheusMiddleware
 
 from app.kafka.producer import KafkaProducer
 from app.routers.default_router import DefaultRouter
@@ -36,10 +40,26 @@ class Application:
             await self._db.shutdown()
             await self._kafka_producer.stop()
 
+        @server.get("/favicon.ico")
+        async def _favicon():
+            return FileResponse("favicon.ico")
+
+        if cors_origin_regex := self._config.cors_origin_regex:
+            server.add_middleware(
+                CORSMiddleware,
+                allow_origin_regex=cors_origin_regex,
+                allow_credentials=True,
+                allow_methods=["*"],
+                allow_headers=["*"],
+            )
+
         if sentry_dsn := self._config.sentry_dsn:
             sentry_sdk.init(sentry_dsn)
             server.add_middleware(SentryAsgiMiddleware)
             custom_logger.add(self._sentry_handler, level="ERROR")
+
+        server.add_middleware(PrometheusMiddleware, filter_unhandled_paths=True)
+        server.mount("/metrics", make_asgi_app())
 
         server.include_router(
             self._default.api_router,
