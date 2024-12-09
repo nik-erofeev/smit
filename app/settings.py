@@ -1,9 +1,19 @@
-from pathlib import Path
+import os
+from enum import StrEnum, unique
 
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.utils.db import DbConfig
+
+
+@unique
+class Environments(StrEnum):
+    local = "local"
+    qa = "qa"
+    stage = "stage"
+    prod = "prod"
+    test = "test"
 
 
 class TGConfig(BaseModel):
@@ -22,21 +32,15 @@ class KafkaConfig(BaseModel):
         return f"{self.host}:{self.port}"
 
 
-# todo: Поднимаемся на 1 уровень вверх где лежит .env
-BASE_PATH = Path(__file__).resolve().parent.parent
-
-
 class AppConfig(BaseSettings):
     model_config = SettingsConfigDict(
         env_nested_delimiter="__",
-        env_file=(
-            BASE_PATH / ".env.local.base",
-            BASE_PATH / ".env.local",
-            BASE_PATH / ".env",
-        ),
+        env_file=(".env.local.base", ".env.local", ".env"),
         env_file_encoding="utf-8",
         env_ignore_empty=True,
     )
+
+    environment: Environments = Environments.local
     db: DbConfig = DbConfig()
     kafka: KafkaConfig = KafkaConfig()
     sentry_dsn: str | None = None
@@ -45,5 +49,8 @@ class AppConfig(BaseSettings):
         r"(http://|https://)?(.*\.)?(qa|stage|localhost|0.0.0.0)(\.ru)?(:\d+)?$"
     )
 
+
+#  Поднимаемся на 1 уровень вверх где лежит .env
+BASE_PATH = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 APP_CONFIG = AppConfig()
