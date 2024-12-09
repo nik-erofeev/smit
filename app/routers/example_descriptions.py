@@ -20,20 +20,34 @@ add_tariff_request_example = {
 
 update_tariff_description: dict[str, dict[str, Any]] = {
     "tariff_id": {
-        "example": "da73f1ac-ae75-42e1-a9dd-321ede80e2e6",
-        "description": "The uuid of the tariff to update",
+        "examples": [
+            {
+                "name": "example",
+                "value": "da73f1ac-ae75-42e1-a9dd-321ede80e2e6",
+                "description": "The uuid of the tariff to update",
+            },
+        ],
     },
     "updated_tariff": {
-        "example": {
-            "category_type": "Glass",
-            "rate": 0.77,
-        },
-        "description": "Updated tariff details",
+        "examples": [
+            {
+                "name": "example",
+                "value": {
+                    "category_type": "Glass",
+                    "rate": 0.77,
+                },
+                "description": "Updated tariff details",
+            },
+        ],
     },
 }
 
-
 delete_tariff_description: dict[str, Any] = {
-    "example": "da73f1ac-ae75-42e1-a9dd-321ede80e2e6",
-    "description": "The uuid of the tariff to delete",
+    "examples": [
+        {
+            "name": "example",
+            "value": "da73f1ac-ae75-42e1-a9dd-321ede80e2e6",
+            "description": "The uuid of the tariff to delete",
+        },
+    ],
 }

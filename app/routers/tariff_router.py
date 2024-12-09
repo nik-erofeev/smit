@@ -39,7 +39,13 @@ class TariffRouter:
         async def add_tariff(
             tariff: dict[date, list[TariffBase]] = Body(
                 ...,
-                example=add_tariff_request_example,
+                examples=[
+                    {
+                        "name": "example",
+                        "value": add_tariff_request_example,
+                        "description": "Example of adding tariffs",
+                    },
+                ],
             ),
         ) -> list[TariffResponse]:
             return await self._tariff_service.create_tariff(tariff)
@@ -62,7 +68,13 @@ class TariffRouter:
         async def calculate_cost(
             request: InsuranceCostRequest = Body(
                 ...,
-                example=calculate_request_example,
+                examples=[
+                    {
+                        "name": "example",
+                        "value": calculate_request_example,
+                        "description": "Example of calculating insurance cost",
+                    },
+                ],
             ),
         ) -> InsuranceCostResponse:
             return await self._tariff_service.calculate_insurance_cost(request)
