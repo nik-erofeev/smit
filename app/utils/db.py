@@ -9,10 +9,9 @@ from sqlalchemy.orm import DeclarativeBase, declared_attr
 
 
 class DbConfig(BaseModel):
-    dsn: str
+    dsn: str = ""
     max_size: int = 1
-    min_size: int = 1
-    statement_cache_size: int = 1024 * 15
+    debug: bool = False
 
 
 class Base(DeclarativeBase):
@@ -42,7 +41,7 @@ class Db:
         self._config = config
         self._engine = create_async_engine(
             url=config.dsn,
-            echo=True,
+            echo=config.debug,
             pool_size=config.max_size,
             max_overflow=10,  # Настройки пула соединений
         )

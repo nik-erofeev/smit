@@ -6,7 +6,7 @@ authors = ["Nik <erofeev.nik.it@yandex.ru>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "3.12.7"
+python = "^3.12"
 ruff = "^0.8.1"
 fastapi = "^0.115.5"
 uvicorn = "^0.32.1"
@@ -28,6 +28,8 @@ mypy = "^1.13.0"
 sentry-sdk = "^2.19.2"
 notifiers = "^1.3.3"
 setuptools = "^75.6.0"
+starlette-prometheus = "^0.10.0"
+pydantic-settings = "^2.6.1"
 
 
 [tool.poetry.group.dev.dependencies]

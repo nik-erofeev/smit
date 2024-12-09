@@ -1,0 +1,23 @@
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    # Override the global default and scrape targets from this job every 5 seconds.
+    scrape_interval: 5s
+    static_configs:
+      - targets: [ 'prometheus:9090' ]
+
+  - job_name: 'api'
+    static_configs:
+      - targets: ['smit-api:8000']
+#      - targets: ['host.docker.internal:8000']  # при локальном поднятии api
+    metrics_path: /metrics
+    scheme: http
+
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres_exporter:9187']
+
+
+
