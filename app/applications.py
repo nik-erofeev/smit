@@ -55,8 +55,8 @@ class Application:
                 allow_headers=["*"],
             )
 
-        if sentry_dsn := self._config.sentry_dsn:
-            sentry_sdk.init(sentry_dsn)
+        if self._config.sentry_dsn and self._config.environment != "test":
+            sentry_sdk.init(self._config.sentry_dsn)
             server.add_middleware(SentryAsgiMiddleware)
             custom_logger.add(self._sentry_handler, level="ERROR")
 

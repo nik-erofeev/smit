@@ -1,0 +1,13 @@
+{
+    "published_at": "2020-06-01",
+    "rates": [
+        {
+            "category_type": "Glass",
+            "rate": 0.04
+        },
+        {
+            "category_type": "Other",
+            "rate": 0.01
+        }
+    ]
+}

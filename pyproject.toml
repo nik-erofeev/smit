@@ -33,6 +33,7 @@ pydantic-settings = "^2.6.1"
 pytest = "^8.3.4"
 pytest-asyncio = "^0.24.0"
 pytest-cov = "^6.0.0"
+httpx = "^0.28.1"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -96,3 +97,7 @@ skip = ['.git',
 [tool.mypy]
 strict = false
 ignore_missing_imports = true
+
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"
