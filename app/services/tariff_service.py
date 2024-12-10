@@ -141,7 +141,10 @@ class TariffService:
         )
 
     async def get_tariff_by_id(self, tariff_id: UUID) -> Tariff | None:
-        return await self._tariff_repo.get_tariff_by_id(tariff_id)
+        tariff = await self._tariff_repo.get_tariff_by_id(tariff_id)
+        if not tariff:
+            raise HTTPException(status_code=404, detail="Tariff not found")
+        return tariff
 
     async def update_tariff(
         self,

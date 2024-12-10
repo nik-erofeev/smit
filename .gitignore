@@ -192,6 +192,10 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 cover/
+.pytest_cache
+coverage-tests-unit.xml
+tests-unit-results.xml
+.ruff_cache
 
 # Translations
 *.mo

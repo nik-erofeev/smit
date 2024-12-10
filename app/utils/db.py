@@ -9,7 +9,7 @@ from sqlalchemy.orm import DeclarativeBase, declared_attr
 
 
 class DbConfig(BaseModel):
-    dsn: str = ""
+    dsn: str = "postgresql+asyncpg://user:password@localhost:5432/db"
     max_size: int = 1
     debug: bool = False
 

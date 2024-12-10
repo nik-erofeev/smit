@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -29,17 +31,17 @@ class Application:
         self._rate = rate
         self._kafka_producer = kafka_producer
 
+    @asynccontextmanager
+    async def lifespan(self, server: FastAPI):
+        # Startup
+        await self._db.start()
+        await self._kafka_producer.start()
+        yield
+        # Shutdown
+        await self._db.shutdown()
+        await self._kafka_producer.stop()
+
     def setup(self, server: FastAPI) -> None:
-        @server.on_event("startup")
-        async def on_startup() -> None:
-            await self._db.start()
-            await self._kafka_producer.start()
-
-        @server.on_event("shutdown")
-        async def on_shutdown() -> None:
-            await self._db.shutdown()
-            await self._kafka_producer.stop()
-
         @server.get("/favicon.ico")
         async def _favicon():
             return FileResponse("favicon.ico")
@@ -53,8 +55,8 @@ class Application:
                 allow_headers=["*"],
             )
 
-        if sentry_dsn := self._config.sentry_dsn:
-            sentry_sdk.init(sentry_dsn)
+        if self._config.sentry_dsn and self._config.environment != "test":
+            sentry_sdk.init(self._config.sentry_dsn)
             server.add_middleware(SentryAsgiMiddleware)
             custom_logger.add(self._sentry_handler, level="ERROR")
 
@@ -92,6 +94,7 @@ class Application:
                 "url": "https://www.apache.org/licenses/LICENSE-2.0.html",
             },
             openapi_url="/api/v1/openapi.json",
+            lifespan=self.lifespan,
         )
         self.setup(server)
         return server
