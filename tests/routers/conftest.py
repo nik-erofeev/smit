@@ -1,6 +1,6 @@
 import pytest
-from fastapi.testclient import TestClient
 from punq import Container, Scope
+from starlette.testclient import TestClient
 
 from app.kafka.producer import KafkaProducer
 from app.repositories.tariff_repository import TariffRepo
@@ -13,30 +13,37 @@ from app.utils.db import Db
 
 @pytest.fixture
 def client(
-    monkeypatch,  # для замены атрибутов
+    monkeypatch,
     db_mock,
     kafka_producer_mock,
+    tariff_repository_mock,
+    tariff_service_mock,
 ):
     def bootstrap_mock(app_config: AppConfig):
-        """Функция для создания контейнера зависимостей с моками"""
+        container = Container()
 
-        container = Container()  # Создаем новый контейнер зависимостей
         container.register(AppConfig, instance=app_config)
 
         container.register(Db, instance=db_mock, scope=Scope.singleton)
-        container.register(KafkaProducer, kafka_producer_mock, scope=Scope.singleton)
 
-        container.register(TariffRepo)
-        container.register(TariffService)
-        container.register(TariffRouter)
+        container.register(
+            KafkaProducer,
+            instance=kafka_producer_mock,
+            scope=Scope.singleton,
+        )
 
         container.register(DefaultRouter, DefaultRouter)
+        container.register(TariffRouter, TariffRouter)
+
+        container.register(TariffService, instance=tariff_service_mock)
+        container.register(TariffRepo, instance=tariff_repository_mock)
+
         return container
 
-    import main  # импорт main после определения bootstrap_mock
-    from main import app  # импорт приложения FastAPI из main
+    # todo:  Заменяем функцию bootstrap на нашу мок-версию
+    monkeypatch.setattr("app.bootstrap.bootstrap", bootstrap_mock)
 
-    # todo: заменяем функцию bootstrap в main на нашу mock-версию
-    monkeypatch.setattr(main, "bootstrap", bootstrap_mock)
+    # импорт main после определения bootstrap_mock
+    from main import app
 
     return TestClient(app)

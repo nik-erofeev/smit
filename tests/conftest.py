@@ -32,7 +32,7 @@ def kafka_producer_mock():
 
 
 @pytest.fixture
-def tariff_service(kafka_producer_mock, tariff_repository_mock):
+def tariff_service_mock(kafka_producer_mock, tariff_repository_mock):
     return TariffService(tariff_repository_mock, kafka_producer_mock)
 
 

@@ -1,3 +1,4 @@
+from loguru import logger
 from punq import Container, Scope
 
 from app.kafka.producer import KafkaProducer
@@ -12,21 +13,28 @@ from app.utils.db import Db
 def bootstrap(app_config: AppConfig) -> Container:
     container = Container()
 
-    container.register(AppConfig, instance=app_config)
+    try:
+        container.register(AppConfig, instance=app_config)
 
-    smit_db = Db(app_config.db)
-    container.register(Db, instance=smit_db, scope=Scope.singleton)
+        smit_db = Db(app_config.db)
+        container.register(Db, instance=smit_db, scope=Scope.singleton)
 
-    kafka_producer = KafkaProducer(
-        bootstrap_servers=app_config.kafka.bootstrap_servers,
-        default_topic=app_config.kafka.topik,
-    )
-    container.register(KafkaProducer, instance=kafka_producer, scope=Scope.singleton)
+        kafka_producer = KafkaProducer(
+            bootstrap_servers=app_config.kafka.bootstrap_servers,
+            default_topic=app_config.kafka.topik,
+        )
+        container.register(
+            KafkaProducer,
+            instance=kafka_producer,
+            scope=Scope.singleton,
+        )
 
-    container.register(TariffRepo)
-    container.register(TariffService)
-    container.register(TariffRouter)
+        container.register(DefaultRouter, DefaultRouter)
+        container.register(TariffRouter, TariffRouter)
 
-    container.register(DefaultRouter, DefaultRouter)
-
+        container.register(TariffService, TariffService)
+        container.register(TariffRepo, TariffRepo)
+    except Exception as e:
+        logger.error(f"Error during bootstrap: {e}")
+        raise
     return container

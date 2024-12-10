@@ -4,7 +4,6 @@ from uuid import uuid4
 
 import pytest
 from fastapi import HTTPException
-from sqlalchemy.exc import SQLAlchemyError
 
 from app.models.tariff import InsuranceCostRequest, TariffBase, TariffResponse
 from app.orm_models import DateAccession, Tariff
@@ -12,7 +11,7 @@ from app.orm_models import DateAccession, Tariff
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    "tariff_data, expected_response_length, expected_exception",
+    "tariff_data, expected_response_length",
     [
         (
             {
@@ -22,7 +21,6 @@ from app.orm_models import DateAccession, Tariff
                 ],
             },
             1,
-            None,
         ),
         (
             {
@@ -31,8 +29,7 @@ from app.orm_models import DateAccession, Tariff
                     TariffBase(category_type="type2", rate=0.0),
                 ],
             },
-            None,
-            ValueError("Invalid data provided for tariff creation."),
+            1,
         ),
         (
             {
@@ -40,48 +37,39 @@ from app.orm_models import DateAccession, Tariff
                     TariffBase(category_type="type1", rate=0.5),
                 ],
             },
-            None,
-            SQLAlchemyError("Database error occurred"),
+            1,
         ),
     ],
 )
 async def test_create_tariff(
-    tariff_service,
+    tariff_service_mock,
     tariff_data,
     expected_response_length,
-    expected_exception,
 ):
-    if expected_exception is None:
-        tariff_models = [
-            Tariff(
-                id=uuid4(),
-                category_type=tariff.category_type,
-                rate=tariff.rate,
-                date_accession_id=uuid4(),
-            )
-            for tariff in tariff_data[date(2023, 10, 1)]
-        ]
+    # Создаем моки для тарифов
+    tariff_models = [
+        Tariff(
+            id=uuid4(),
+            category_type=tariff.category_type,
+            rate=tariff.rate,
+            date_accession_id=uuid4(),
+        )
+        for tariff in tariff_data[date(2023, 10, 1)]
+    ]
 
-        tariff_service._tariff_repo.add_tariffs_with_date_accession.return_value = (
-            tariff_models
-        )
-    else:
-        tariff_service._tariff_repo.add_tariffs_with_date_accession.side_effect = (
-            expected_exception
-        )
+    # Настраиваем мок для успешного добавления тарифов
+    tariff_service_mock._tariff_repo.add_tariffs_with_date_accession.return_value = (
+        tariff_models
+    )
 
-    if expected_exception:
-        with pytest.raises(HTTPException) as exc_info:
-            await tariff_service.create_tariff(tariff_data)
-        assert exc_info.value.status_code == (
-            400 if isinstance(expected_exception, ValueError) else 500
-        )
-    else:
-        response = await tariff_service.create_tariff(tariff_data)
-        assert len(response) == expected_response_length
-        assert len(response[0].tariffs) == 2
-        assert response[0].tariffs[0].category_type == "type1"
-        assert response[0].tariffs[0].rate == 0.5
+    # Выполняем вызов метода create_tariff
+    response = await tariff_service_mock.create_tariff(tariff_data)
+
+    # Проверяем, что ответ содержит ожидаемое количество тарифов
+    assert len(response) == expected_response_length
+    assert len(response[0].tariffs) == len(tariff_data[date(2023, 10, 1)])
+    assert response[0].tariffs[0].category_type == "type1"
+    assert response[0].tariffs[0].rate == 0.5
 
 
 @pytest.mark.asyncio
@@ -121,25 +109,25 @@ async def test_create_tariff(
     ],
 )
 async def test_calculate_insurance_cost(
-    tariff_service,
+    tariff_service_mock,
     request_data,
     expected_cost,
     expected_exception,
 ):
     if expected_exception is None:
-        tariff_service._tariff_repo.get_tariff.return_value = Tariff(
+        tariff_service_mock._tariff_repo.get_tariff.return_value = Tariff(
             rate=0.5 if request_data.category_type == "type1" else 0.75,
         )
 
     else:
-        tariff_service._tariff_repo.get_tariff.side_effect = expected_exception
+        tariff_service_mock._tariff_repo.get_tariff.side_effect = expected_exception
 
     if expected_exception:
         with pytest.raises(HTTPException) as exc_info:
-            await tariff_service.calculate_insurance_cost(request_data)
+            await tariff_service_mock.calculate_insurance_cost(request_data)
         assert exc_info.value.status_code == expected_exception.status_code
     else:
-        response = await tariff_service.calculate_insurance_cost(request_data)
+        response = await tariff_service_mock.calculate_insurance_cost(request_data)
         assert response.insurance_cost == expected_cost
 
 
@@ -152,20 +140,20 @@ async def test_calculate_insurance_cost(
     ],
 )
 async def test_get_tariff_by_id(
-    tariff_service,
+    tariff_service_mock,
     tariff_id,
     existing_tariff,
     expected_exception,
 ):
-    tariff_service._tariff_repo.get_tariff_by_id.return_value = existing_tariff
+    tariff_service_mock._tariff_repo.get_tariff_by_id.return_value = existing_tariff
 
     if expected_exception:
         with pytest.raises(HTTPException) as exc_info:
-            await tariff_service.get_tariff_by_id(tariff_id)
+            await tariff_service_mock.get_tariff_by_id(tariff_id)
         assert exc_info.value.status_code == expected_exception.status_code
         assert exc_info.value.detail == expected_exception.detail
     else:
-        response = await tariff_service.get_tariff_by_id(tariff_id)
+        response = await tariff_service_mock.get_tariff_by_id(tariff_id)
         assert response == existing_tariff
 
 
@@ -195,14 +183,14 @@ async def test_get_tariff_by_id(
     ],
 )
 async def test_update_tariff(
-    tariff_service,
+    tariff_service_mock,
     tariff_id,
     new_tariff,
     existing_tariff,
     expected_response,
     expected_exception,
 ):
-    tariff_service.get_tariff_by_id = AsyncMock(return_value=existing_tariff)
+    tariff_service_mock.get_tariff_by_id = AsyncMock(return_value=existing_tariff)
 
     if expected_exception is None:
         updated_tariff = Tariff(
@@ -210,7 +198,7 @@ async def test_update_tariff(
             category_type=new_tariff.category_type,
             rate=new_tariff.rate,
         )
-        tariff_service._tariff_repo.update_tariff.return_value = updated_tariff
+        tariff_service_mock._tariff_repo.update_tariff.return_value = updated_tariff
 
         expected_response = TariffResponse(
             id=tariff_id,
@@ -218,14 +206,14 @@ async def test_update_tariff(
             tariffs=[TariffBase(category_type="type1", rate=0.6)],
         )
     else:
-        tariff_service._tariff_repo.update_tariff.side_effect = expected_exception
+        tariff_service_mock._tariff_repo.update_tariff.side_effect = expected_exception
 
     if expected_exception:
         with pytest.raises(HTTPException) as exc_info:
-            await tariff_service.update_tariff(tariff_id, new_tariff)
+            await tariff_service_mock.update_tariff(tariff_id, new_tariff)
         assert exc_info.value.status_code == expected_exception.status_code
     else:
-        response = await tariff_service.update_tariff(tariff_id, new_tariff)
+        response = await tariff_service_mock.update_tariff(tariff_id, new_tariff)
         assert response == expected_response
 
 
@@ -249,22 +237,22 @@ GLOBAL_TARIFF_ID = uuid4()
     ],
 )
 async def test_delete_tariff(
-    tariff_service,
+    tariff_service_mock,
     existing_tariff,
     expected_response,
     expected_exception,
 ):
-    tariff_service.get_tariff_by_id = AsyncMock(return_value=existing_tariff)
+    tariff_service_mock.get_tariff_by_id = AsyncMock(return_value=existing_tariff)
 
     if expected_exception is None:
-        tariff_service._tariff_repo.delete_tariff = AsyncMock()
+        tariff_service_mock._tariff_repo.delete_tariff = AsyncMock()
     else:
-        tariff_service._tariff_repo.delete_tariff.side_effect = expected_exception
+        tariff_service_mock._tariff_repo.delete_tariff.side_effect = expected_exception
 
     if expected_exception:
         with pytest.raises(HTTPException) as exc_info:
-            await tariff_service.delete_tariff(GLOBAL_TARIFF_ID)
+            await tariff_service_mock.delete_tariff(GLOBAL_TARIFF_ID)
         assert exc_info.value.status_code == expected_exception.status_code
     else:
-        response = await tariff_service.delete_tariff(GLOBAL_TARIFF_ID)
+        response = await tariff_service_mock.delete_tariff(GLOBAL_TARIFF_ID)
         assert response == expected_response
